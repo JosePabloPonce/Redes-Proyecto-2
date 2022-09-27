@@ -1,5 +1,6 @@
 import socket, os, sys
 from threading import Thread
+import json
 
 HOST, PORT = '127.0.0.1', 1234
 
@@ -34,6 +35,9 @@ def convert_list(lista):
 def from_client(client, adress):
 	while True:
 		try:
+			msg = json.loads(client.recv(BUFSIZ).decode('UTF-8'))
+			print(msg)
+			'''
 			msg = client.recv(BUFSIZ).decode("utf-8")
 			if msg == "LEFT":
 				leftname = people[adress[1]]
@@ -55,7 +59,7 @@ def from_client(client, adress):
 				if sock == client:
 					continue
 				sock.send(bytes(people[adress[1]]+": "+msg, "utf-8"))
-
+'''
 		except Exception as e:
 			print("While loop exit because of {}".format(e)) #To remove
 			client.close()
@@ -71,13 +75,16 @@ print("Esperando Conexiones...")
 while True:
 	c, a = SERVER.accept()
 	lista_sockets.append(c)
-	name = c.recv(BUFSIZ).decode("utf-8")
+	name = json.loads(c.recv(BUFSIZ).decode('UTF-8'))
+	print(name)
 	sys.stdout.write(BOLD+GREEN+a[0]+":"+str(a[1])+" Conectado"+RESET+"\n")
 	people[a[1]] = name
 	Nombres.append(name)
+	'''
 	for sock in lista_sockets:
 		if sock == c:
 			continue
 		sock.send(bytes("INFO: "+BOLD+GREEN+a[0]+":"+str(a[1])+" ("+"%s" % (name) +")"+" Se unio"+RESET+"\n", "utf-8"))
+	'''
 	Thread(target=from_client, args=(c,a)).start()
 	#print(Nombres, people)
