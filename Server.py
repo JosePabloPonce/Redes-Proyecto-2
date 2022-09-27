@@ -36,30 +36,9 @@ def from_client(client, adress):
 	while True:
 		try:
 			msg = json.loads(client.recv(BUFSIZ).decode('UTF-8'))
-			print(msg)
-			'''
-			msg = client.recv(BUFSIZ).decode("utf-8")
-			if msg == "LEFT":
-				leftname = people[adress[1]]
-				sys.stdout.write(BOLD+RED+people[adress[1]]+" left"+RESET+"\n")
-				Nombres.remove(people[adress[1]])
-				del people[adress[1]]
-				lista_sockets.remove(client)
-				for sock in lista_sockets:
-					if sock == client:
-						continue
-					sock.send(bytes("INFO: "+BOLD+RED+leftname+" left"+RESET+"\n", "utf-8"))
-				client.send(bytes("left", "utf-8"))
-				return
-			if msg == "LIST":
-				client.sendall(bytes("INFO: "+convert_list(Nombres), "utf-8"))
-				continue
-			sys.stdout.write(people[adress[1]]+"> "+msg)
-			for sock in lista_sockets:
-				if sock == client:
-					continue
-				sock.send(bytes(people[adress[1]]+": "+msg, "utf-8"))
-'''
+			if(mensaje['request'] == "INICIO_JUEGO"):
+				print("a")
+
 		except Exception as e:
 			print("While loop exit because of {}".format(e)) #To remove
 			client.close()
@@ -75,16 +54,18 @@ print("Esperando Conexiones...")
 while True:
 	c, a = SERVER.accept()
 	lista_sockets.append(c)
-	name = json.loads(c.recv(BUFSIZ).decode('UTF-8'))
-	print(name)
+	mensaje = json.loads(c.recv(BUFSIZ).decode('UTF-8'))
+	print(mensaje)
 	sys.stdout.write(BOLD+GREEN+a[0]+":"+str(a[1])+" Conectado"+RESET+"\n")
-	people[a[1]] = name
-	Nombres.append(name)
-	'''
-	for sock in lista_sockets:
-		if sock == c:
-			continue
-		sock.send(bytes("INFO: "+BOLD+GREEN+a[0]+":"+str(a[1])+" ("+"%s" % (name) +")"+" Se unio"+RESET+"\n", "utf-8"))
-	'''
+	people[a[1]] = mensaje
+	Nombres.append(mensaje)
+
+	if (mensaje['request'] == "INIT_CONEX"):
+		INIT_CONEX = {"response": "INIT_CONEX"}
+		c.send(bytes(json.dumps(INIT_CONEX), 'UTF-8'))
+	
+	#for sock in lista_sockets:
+	#	sock.send(bytes("INFO: "+BOLD+GREEN+a[0]+":"+str(a[1])+" ("+"%s" % (name) +")"+" Se unio"+RESET+"\n", "utf-8"))
+	
 	Thread(target=from_client, args=(c,a)).start()
 	#print(Nombres, people)
