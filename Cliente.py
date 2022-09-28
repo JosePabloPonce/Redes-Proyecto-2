@@ -32,18 +32,17 @@ while conexion:
 	if opcion == '1':
 		INICIO_JUEGO =  {"request": "INICIO_JUEGO"}
 		client_socket.send(bytes(json.dumps(INICIO_JUEGO), 'UTF-8'))
-		print("ESPERANDO A MAS JUGADORES...")
+		print("ESPERANDO A MAS JUGADORES...\n")
 		msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
 		if (msg['response'] == "INICIO_JUEGO"):
 			print("JUEGO INICIADO\n")
-			print("LISTA DE JUGADORES\n")
-			print(msg['body'])
+			print("LISTA DE JUGADORES")
+			print(msg['body'], "\n")
 			GET_CARTAS =  {"request": "GET_CARTAS"}
 			client_socket.send(bytes(json.dumps(GET_CARTAS), 'UTF-8'))
 			msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
-			print("BARAJA DE CARTAS\n")
-			print(msg['body'])
-
+			print("BARAJA DE CARTAS")
+			print(msg['body'], "\n")
 
 	if opcion == '2':
 		END_CONEX = {"request": "END_CONEX"}
