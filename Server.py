@@ -27,10 +27,13 @@ sala1_jugadores_cartas_nombres_oculta = []
 sala1_contador_turno = 0
 sala1_contador_turno_inicial = 0
 sala1_contador_turno_inicial2 = 0
-
 sala1_continua_juego = True
 
 def from_client(client, adress, nombre):
+	global sala1_continua_juego
+	global sala1_contador_turno 
+	global sala1_contador_turno_inicial 
+	global sala1_contador_turno_inicial2
 	while True:
 		try:
 			msg = json.loads(client.recv(BUFSIZ).decode('UTF-8'))
@@ -82,14 +85,11 @@ def from_client(client, adress, nombre):
 			
 			if(msg['request'] == "GET_TURNO"):
 
-				global sala1_contador_turno 
-				global sala1_contador_turno_inicial 
-				global sala1_contador_turno_inicial2
 
 				GET_TURNO = {"response": "GET_TURNO", "body" : [sala1_Jugadores[sala1_contador_turno], sala1_continua_juego] }
 
 				if(sala1_contador_turno_inicial2 != 0):
-					client.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
+					client.send(bytes(json.dumps(GET_TURNO), 'UTF-8'))
 
 				if(sala1_contador_turno_inicial < 3):
 					sala1_contador_turno_inicial +=1
@@ -101,10 +101,10 @@ def from_client(client, adress, nombre):
 						sala1_contador_turno_inicial2 +=1
 				
 			if(msg['request'] == "POST_TURNO"):
-				if(sala1_contador_turno == 2):
-					sala1_contador_turno = 0
-				
 				sala1_contador_turno += 1
+				if(sala1_contador_turno == 3):
+					sala1_contador_turno = 0
+
 				opcion = msg['body'][0]
 				name = msg['name']
 				carta = msg['body'][1]
@@ -118,12 +118,12 @@ def from_client(client, adress, nombre):
 					if(name == sala1_jugadores_cartas_nombres_oculta[1][0][0]):
 						desecho = sala1_jugadores_cartas_nombres_oculta[1][0][int(carta)]
 						sala1_jugadores_cartas_nombres_oculta[1][0][int(carta)] = card.name
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[0], "desecho": desecho}
+						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[1], "desecho": desecho}
 						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
 					if(name == sala1_jugadores_cartas_nombres_oculta[2][0][0]):
 						desecho = sala1_jugadores_cartas_nombres_oculta[2][0][int(carta)]
 						sala1_jugadores_cartas_nombres_oculta[2][0][int(carta)] = card.name
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[0], "desecho": desecho}
+						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[2], "desecho": desecho}
 						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
 				if(opcion == "2"):
 					if(name == sala1_jugadores_cartas_nombres_oculta[0][0][0]):
@@ -133,13 +133,13 @@ def from_client(client, adress, nombre):
 						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
 					if(name == sala1_jugadores_cartas_nombres_oculta[1][0][0]):
 						desecho = card.name
-						sala1_jugadores_cartas_nombres_oculta[1][0][int(carta)] = sala1_jugadores_cartas_nombres[0][int(carta)]
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[0], "desecho": desecho}
+						sala1_jugadores_cartas_nombres_oculta[1][0][int(carta)] = sala1_jugadores_cartas_nombres[1][int(carta)]
+						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[1], "desecho": desecho}
 						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
 					if(name == sala1_jugadores_cartas_nombres_oculta[2][0][0]):
 						desecho = card.name
-						sala1_jugadores_cartas_nombres_oculta[2][0][int(carta)] = sala1_jugadores_cartas_nombres[0][int(carta)]
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[0], "desecho": desecho}
+						sala1_jugadores_cartas_nombres_oculta[2][0][int(carta)] = sala1_jugadores_cartas_nombres[2][int(carta)]
+						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[2], "desecho": desecho}
 						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
 				if(opcion == "3"):
 					if(name == sala1_jugadores_cartas_nombres_oculta[0][0][0]):
@@ -148,11 +148,11 @@ def from_client(client, adress, nombre):
 						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
 					if(name == sala1_jugadores_cartas_nombres_oculta[1][0][0]):
 						sala1_jugadores_cartas_nombres_oculta[1][0][int(carta)] = desecho
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[0], "desecho": desecho}
+						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[1], "desecho": desecho}
 						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
 					if(name == sala1_jugadores_cartas_nombres_oculta[2][0][0]):
 						sala1_jugadores_cartas_nombres_oculta[2][0][int(carta)] = desecho
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[0], "desecho": desecho}
+						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[2], "desecho": desecho}
 						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
 			if(msg['request'] == "END_CONEX"):
 				sys.stdout.write(BOLD+GREEN+a[0]+":"+str(adress[1])+" Se desconecto"+RESET+"\n")

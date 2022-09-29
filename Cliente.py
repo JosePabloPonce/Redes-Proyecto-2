@@ -95,6 +95,8 @@ while conexion:
 				turno(mazo_recibido)
 				msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
 				print(msg)
+				mazo_recibido = (msg['body'][0])
+
 				GET_TURNO = {"request": "GET_TURNO"}
 				client_socket.send(bytes(json.dumps(GET_TURNO), 'UTF-8'))
 				msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
