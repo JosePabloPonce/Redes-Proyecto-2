@@ -24,6 +24,11 @@ sala1_jugadores_cartas_nombres = []
 sala1_jugadores_cartas_valores = []
 sala1_jugadores_cartas_palo = []
 sala1_jugadores_cartas_nombres_oculta = []
+sala1_contador_turno = 0
+sala1_contador_turno_inicial = 0
+sala1_contador_turno_inicial2 = 0
+
+sala1_continua_juego = True
 
 def from_client(client, adress, nombre):
 	while True:
@@ -74,7 +79,32 @@ def from_client(client, adress, nombre):
 					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta[2]}
 					print(POST_CARTA_INI)
 					client.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
+			
+			if(msg['request'] == "GET_TURNO"):
+
+				global sala1_contador_turno 
+				global sala1_contador_turno_inicial 
+				global sala1_contador_turno_inicial2
+
+				GET_TURNO = {"response": "GET_TURNO", "body" : [sala1_Jugadores[sala1_contador_turno], sala1_continua_juego] }
+
+				if(sala1_contador_turno_inicial2 != 0):
+					client.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
+
+				if(sala1_contador_turno_inicial < 3):
+					sala1_contador_turno_inicial +=1
+				
+				if (sala1_contador_turno_inicial == 3 and sala1_contador_turno_inicial2 == 0):
+					
+					for sock in sala1_sockets:
+						sock.send(bytes(json.dumps(GET_TURNO), 'UTF-8'))
+						sala1_contador_turno_inicial2 +=1
+				
 			if(msg['request'] == "POST_TURNO"):
+				if(sala1_contador_turno == 2):
+					sala1_contador_turno = 0
+				
+				sala1_contador_turno += 1
 				opcion = msg['body'][0]
 				name = msg['name']
 				carta = msg['body'][1]

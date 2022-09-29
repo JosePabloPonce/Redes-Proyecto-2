@@ -2,6 +2,7 @@ import socket, os, sys
 from threading import Thread
 import json
 from deck_of_cards import deck_of_cards
+import time
 
 HOST, PORT = '127.0.0.1', 1234
 NAME = input("Ingresar Nombre: ")
@@ -67,9 +68,38 @@ while conexion:
 			msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
 			print("BARAJA DE CARTAS")
 			print(msg['body'], "\n")
-			turno(msg['body'][0])
+			mazo_recibido = (msg['body'][0])
+			GET_TURNO = {"request": "GET_TURNO"}
+			client_socket.send(bytes(json.dumps(GET_TURNO), 'UTF-8'))
+			print("ESPERANDO TURNO...")
 			msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
-			print(msg)
+			turno_jugador = msg["body"][0]
+			continuar_juego = msg["body"][1]
+			
+			while (continuar_juego):
+				while(turno_jugador != NAME):
+					print("ESPERANDO TURNO...")
+					time.sleep(15)
+					client_socket.send(bytes(json.dumps(GET_TURNO), 'UTF-8'))
+					msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
+					if(msg['response'] == 'GET_TURNO'):
+						turno_jugador = msg["body"][0]
+						continuar_juego = msg["body"][1]
+					else:
+						pass
+
+				
+				if(continuar_juego == False):
+					continue
+
+				turno(mazo_recibido)
+				msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
+				print(msg)
+				GET_TURNO = {"request": "GET_TURNO"}
+				client_socket.send(bytes(json.dumps(GET_TURNO), 'UTF-8'))
+				msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
+				turno_jugador = msg["body"][0]
+				continuar_juego = msg["body"][1]
 
 	if opcion == '2':
 		END_CONEX = {"request": "END_CONEX"}
