@@ -68,17 +68,17 @@ def from_client(client, adress, nombre):
 				if(name == sala1_jugadores_cartas_nombres_oculta[0][0][0]):
 					sala1_jugadores_cartas_nombres_oculta[0][0][int(cartas[0])] = sala1_jugadores_cartas_nombres[0][int(cartas[0])]
 					sala1_jugadores_cartas_nombres_oculta[0][0][int(cartas[1])] = sala1_jugadores_cartas_nombres[0][int(cartas[1])]
-					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta}
+					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta[0]}
 					client.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
 				if(name == sala1_jugadores_cartas_nombres_oculta[1][0][0]):
 					sala1_jugadores_cartas_nombres_oculta[1][0][int(cartas[0])] = sala1_jugadores_cartas_nombres[1][int(cartas[0])]
 					sala1_jugadores_cartas_nombres_oculta[1][0][int(cartas[1])] = sala1_jugadores_cartas_nombres[1][int(cartas[1])]
-					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta}
+					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta[1]}
 					client.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
 				if(name == sala1_jugadores_cartas_nombres_oculta[2][0][0]):
 					sala1_jugadores_cartas_nombres_oculta[2][0][int(cartas[0])] = sala1_jugadores_cartas_nombres[2][int(cartas[0])]
 					sala1_jugadores_cartas_nombres_oculta[2][0][int(cartas[1])] = sala1_jugadores_cartas_nombres[2][int(cartas[1])]
-					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta}
+					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta[2]}
 					client.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
 			
 			if(msg['request'] == "GET_TURNO"):
