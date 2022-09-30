@@ -4,7 +4,7 @@ import json
 from deck_of_cards import deck_of_cards
 import time
 
-HOST, PORT = '52.14.18.211', 2000
+HOST, PORT = '127.0.0.1', 1234
 NAME = input("Ingresar Nombre: ")
 conexion = ""
 
@@ -27,15 +27,30 @@ if (mensaje['response'] == "INIT_CONEX"):
 
 left = False
 
+msg = ""
+
+def rc():
+	global msg
+	while True:
+		try:
+			msg = json.loads(client_socket.recv(BUFSIZE).decode("utf-8"))
+			if(msg==""):
+				print("vacio")
+		except:
+			break
+
 def turno(msg):
 	opcion = input("1. Tomar carta y cambiarla por una del mazo\n2. Revelar carta del mazo\n3.Tomar carta desechada y cambiarla por una del mazo\n")
 	for i in range (len(msg)):
+			if (i != 0 or i != 7):
 				print(str(i)+". ", msg[i])
 	if(opcion) == "1":
 		carta =  input("Ingrese el numero de la carta que desea cambiar:\n")
 	if(opcion) == "2":
 		carta =  input("Ingrese el numero de la carta que desea revelar:\n")
 	if(opcion) == "3":
+		carta =  input("Ingrese el numero de la carta que desea cambiar:\n")
+	if(opcion) == "4":
 		carta =  input("Ingrese el numero de la carta que desea cambiar:\n")
 	POST_TURNO = {"request": "POST_TURNO", "body":[opcion,carta], "name": NAME}
 	client_socket.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
@@ -44,34 +59,46 @@ print("BIENVENIDO A GOLF CARD GAME \n")
 opcion = input("1.Iniciar juego \n2.Salir\n")
 while conexion:
 	if opcion == '1':
+		x = Thread(target=rc)
+		x.start()
 		INICIO_JUEGO =  {"request": "INICIO_JUEGO"}
 		client_socket.send(bytes(json.dumps(INICIO_JUEGO), 'UTF-8'))
-		print("ESPERANDO A MAS JUGADORES...\n")
-		msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
+		print("ESPERANDO A MAS JUGADORES...\n")		
+		while(msg == ""):
+			for i in  range(100):
+				i
+			if(msg != ""):
+				while(msg['response'] != "INICIO_JUEGO"):
+					msg
 		if (msg['response'] == "INICIO_JUEGO"):
 			print("JUEGO INICIADO\n")
 			print("LISTA DE JUGADORES")
 			print(msg['body'], "\n")
 			GET_CARTAS =  {"request": "GET_CARTAS"}
 			client_socket.send(bytes(json.dumps(GET_CARTAS), 'UTF-8'))
-			msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
+			while(msg['response'] != "GET_CARTAS"):
+				msg
 			print("BARAJA DE CARTAS")
 			print(msg['body'], "\n")
 			print("Selecciona las dos cartas que deseas mostrar:\n")
 			for i in range (len(msg['body'][0])):
-				print(str(i)+". ", msg['body'][0][i])
+				if (i != 0 or i != 7):
+					print(str(i)+". ", msg['body'][0][i])
 			carta1 = input("Ingrese el numero de la carta 1:\n")
 			carta2 = input("Ingrese el numero de la carta 2:\n")
 			POST_CARTA_INI = {"request": "POST_CARTA_INI", "body" : [carta1,carta2], "name": NAME}
+			#for i in range(3):
 			client_socket.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
-			msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
+			while(msg['response'] != "POST_CARTA_INI"):
+				msg
 			print("BARAJA DE CARTAS")
 			print(msg['body'], "\n")
-			mazo_recibido = (msg['body'][0])
+			mazo_recibido = (msg['body'])
 			GET_TURNO = {"request": "GET_TURNO"}
 			client_socket.send(bytes(json.dumps(GET_TURNO), 'UTF-8'))
 			print("ESPERANDO TURNO...")
-			msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
+			while(msg['response'] != "GET_TURNO"):
+				msg
 			turno_jugador = msg["body"][0]
 			continuar_juego = msg["body"][1]
 			
@@ -80,11 +107,11 @@ while conexion:
 					print("ESPERANDO TURNO...")
 					time.sleep(15)
 					client_socket.send(bytes(json.dumps(GET_TURNO), 'UTF-8'))
-					msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
+					while(msg['response'] != "GET_TURNO"):
+						msg
 					if(msg['response'] == 'GET_TURNO'):
 						turno_jugador = msg["body"][0]
 						continuar_juego = msg["body"][1]
-
 					else:
 						pass
 
@@ -92,46 +119,21 @@ while conexion:
 				if(continuar_juego == False):
 					continue
 
-				
-				turno(mazo_recibido)
-				msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
+				for i in range(3):
+					if(NAME == mazo_recibido[i][0][0]):
+						turno(mazo_recibido[i][0])
+
+				while(msg['response'] != "POST_TURNO"):
+						msg
 				print(msg)
 				mazo_recibido = (msg['body'][0])
 
 				GET_TURNO = {"request": "GET_TURNO"}
 				client_socket.send(bytes(json.dumps(GET_TURNO), 'UTF-8'))
-				msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
+				while(msg['response'] != "GET_TURNO"):
+						msg
 				turno_jugador = msg["body"][0]
 				continuar_juego = msg["body"][1]
-
-			print("JUEGO FINALIZADO")
-			for i in range (len(mazo_recibido)):
-				print(str(i)+". ", mazo_recibido[i])
-			extra = input("Desea cambiar una carta de su mazo por la carta extra?\n1. Si\n2. No\n")
-
-			if(extra == "1"):
-				carta_extra = input("Ingrese la posicion de la carta que desea cambiar:\n")
-				POST_CARTAEXTRA = {
-				"request": "POST_CARTAEXTRA",
-				"body": carta_extra,
-				"name": NAME
-				}
-				client_socket.send(bytes(json.dumps(POST_CARTAEXTRA), 'UTF-8'))
-				msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
-				mazo_recibido = msg['body']
-			if(extra == "2"):
-				POST_NOCARTAEXTRA = {
-				"request": "POST_NOCARTAEXTRA",
-				"name": NAME
-				}
-				client_socket.send(bytes(json.dumps(POST_CARTAEXTRA), 'UTF-8'))
-				msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
-				mazo_recibido = msg['body']
-
-			print(mazo_recibido)
-			
-
-
 
 	if opcion == '2':
 		END_CONEX = {"request": "END_CONEX"}

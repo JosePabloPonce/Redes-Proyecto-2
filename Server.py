@@ -3,7 +3,7 @@ from threading import Thread
 import json
 from deck_of_cards import deck_of_cards
 
-HOST, PORT = '172.31.29.190', 2000
+HOST, PORT = '127.0.0.1', 1234
 
 BUFSIZ = 1024
 ADDR = (HOST, int(PORT))
@@ -28,12 +28,14 @@ sala1_contador_turno = 0
 sala1_contador_turno_inicial = 0
 sala1_contador_turno_inicial2 = 0
 sala1_continua_juego = True
-
+sala1_contador_turno2 = 0
+desecho_valor = 0
 def from_client(client, adress, nombre):
 	global sala1_continua_juego
 	global sala1_contador_turno 
 	global sala1_contador_turno_inicial 
 	global sala1_contador_turno_inicial2
+	global sala1_contador_turno2
 	while True:
 		try:
 			msg = json.loads(client.recv(BUFSIZ).decode('UTF-8'))
@@ -56,7 +58,7 @@ def from_client(client, adress, nombre):
 					lista_temporal3.append(carta.suit)
 					if(i == 6):
 						sala1_jugadores_cartas_nombres_oculta.append([[nombre, 0,0,0,0,0,0, carta.name]])
-				sala1_jugadores_cartas_nombres.append(lista_temporal1)
+				sala1_jugadores_cartas_nombres.append(lista_temporal1) #CARTA.NAME 
 				sala1_jugadores_cartas_valores.append(lista_temporal2)
 				sala1_jugadores_cartas_palo.append(lista_temporal3)
 				sala1_jugadores_cartas_palo
@@ -65,21 +67,20 @@ def from_client(client, adress, nombre):
 			if(msg['request'] == "POST_CARTA_INI"):
 				cartas = msg['body']
 				name = msg['name']
-				if(name == sala1_jugadores_cartas_nombres_oculta[0][0][0]):
-					sala1_jugadores_cartas_nombres_oculta[0][0][int(cartas[0])] = sala1_jugadores_cartas_nombres[0][int(cartas[0])]
-					sala1_jugadores_cartas_nombres_oculta[0][0][int(cartas[1])] = sala1_jugadores_cartas_nombres[0][int(cartas[1])]
-					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta}
-					client.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
-				if(name == sala1_jugadores_cartas_nombres_oculta[1][0][0]):
-					sala1_jugadores_cartas_nombres_oculta[1][0][int(cartas[0])] = sala1_jugadores_cartas_nombres[1][int(cartas[0])]
-					sala1_jugadores_cartas_nombres_oculta[1][0][int(cartas[1])] = sala1_jugadores_cartas_nombres[1][int(cartas[1])]
-					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta}
-					client.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
-				if(name == sala1_jugadores_cartas_nombres_oculta[2][0][0]):
-					sala1_jugadores_cartas_nombres_oculta[2][0][int(cartas[0])] = sala1_jugadores_cartas_nombres[2][int(cartas[0])]
-					sala1_jugadores_cartas_nombres_oculta[2][0][int(cartas[1])] = sala1_jugadores_cartas_nombres[2][int(cartas[1])]
-					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta}
-					client.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
+				sala1_contador_turno2 += 1
+				for i in range(3):
+					if(name == sala1_jugadores_cartas_nombres_oculta[i][0][0]):
+						sala1_jugadores_cartas_nombres_oculta[i][0][int(cartas[0])] = sala1_jugadores_cartas_nombres[i][int(cartas[0])]
+						sala1_jugadores_cartas_nombres_oculta[i][0][int(cartas[1])] = sala1_jugadores_cartas_nombres[i][int(cartas[1])]
+						POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta[i]}
+						
+
+				if(sala1_contador_turno2 ==3):
+					for sock in sala1_sockets:
+						POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta}
+						sock.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
+				
+				
 			
 			if(msg['request'] == "GET_TURNO"):
 
@@ -107,115 +108,33 @@ def from_client(client, adress, nombre):
 				name = msg['name']
 				carta = msg['body'][1]
 				card = sala1_baraja.give_random_card()
+				desecho = ""
 				if(opcion == "1"):
-					if(name == sala1_jugadores_cartas_nombres_oculta[0][0][0]):
-						desecho = sala1_jugadores_cartas_nombres[0][int(carta)]
-						sala1_jugadores_cartas_nombres_oculta[0][0][int(carta)] = card.name
-						sala1_jugadores_cartas_nombres[0][int(carta)] = card.name
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[0], "desecho": desecho}
-						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
-						if 0 not in sala1_jugadores_cartas_nombres_oculta[0][0]:
-							sala1_continua_juego = False
-
-					if(name == sala1_jugadores_cartas_nombres_oculta[1][0][0]):
-						desecho = sala1_jugadores_cartas_nombres[1][int(carta)]
-						sala1_jugadores_cartas_nombres_oculta[1][0][int(carta)] = card.name
-						sala1_jugadores_cartas_nombres[1][int(carta)] = card.name
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[1], "desecho": desecho}
-						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
-						if 0 not in sala1_jugadores_cartas_nombres_oculta[1][0]:
-							sala1_continua_juego = False
-
-					if(name == sala1_jugadores_cartas_nombres_oculta[2][0][0]):
-						desecho = sala1_jugadores_cartas_nombres[2][int(carta)]
-						sala1_jugadores_cartas_nombres_oculta[2][0][int(carta)] = card.name
-						sala1_jugadores_cartas_nombres[2][int(carta)] = card.name
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[2], "desecho": desecho}
-						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
-						if 0 not in sala1_jugadores_cartas_nombres_oculta[2][0]:
-							sala1_continua_juego = False
-
+					for i in range(3):
+						if(name == sala1_jugadores_cartas_nombres_oculta[i][0][0]):
+							desecho = sala1_jugadores_cartas_nombres[i][int(carta)]
+							desecho_valor = sala1_jugadores_cartas_valores[i][int(carta)]
+							sala1_jugadores_cartas_nombres[i][int(carta)] = card.name
+							sala1_jugadores_cartas_nombres_oculta[i][0][int(carta)] = card.name
+							sala1_jugadores_cartas_valores[i][int(carta)] = card.value
+							POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[i], "desecho": desecho}
+							client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
 				if(opcion == "2"):
-					if(name == sala1_jugadores_cartas_nombres_oculta[0][0][0]):
-						desecho = card.name
-						sala1_jugadores_cartas_nombres_oculta[0][0][int(carta)] = sala1_jugadores_cartas_nombres[0][int(carta)]
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[0], "desecho": desecho}
-						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
-						if 0 not in sala1_jugadores_cartas_nombres_oculta[0][0]:
-							sala1_continua_juego = False
-
-					if(name == sala1_jugadores_cartas_nombres_oculta[1][0][0]):
-						desecho = card.name
-						sala1_jugadores_cartas_nombres_oculta[1][0][int(carta)] = sala1_jugadores_cartas_nombres[1][int(carta)]
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[1], "desecho": desecho}
-						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
-						if 0 not in sala1_jugadores_cartas_nombres_oculta[1][0]:
-							sala1_continua_juego = False
-
-					if(name == sala1_jugadores_cartas_nombres_oculta[2][0][0]):
-						desecho = card.name
-						sala1_jugadores_cartas_nombres_oculta[2][0][int(carta)] = sala1_jugadores_cartas_nombres[2][int(carta)]
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[2], "desecho": desecho}
-						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
-						if 0 not in sala1_jugadores_cartas_nombres_oculta[2][0]:
-							sala1_continua_juego = False
-
+					for i in range(3):
+						if(name == sala1_jugadores_cartas_nombres_oculta[i][0][0]):
+							desecho = card.name
+							sala1_jugadores_cartas_nombres_oculta[i][0][int(carta)] = sala1_jugadores_cartas_nombres[i][int(carta)]
+							POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[i], "desecho": desecho}
+							client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
 				if(opcion == "3"):
-					if(name == sala1_jugadores_cartas_nombres_oculta[0][0][0]):
-						sala1_jugadores_cartas_nombres_oculta[0][0][int(carta)] = desecho
-						sala1_jugadores_cartas_nombres[0][int(carta)] = desecho
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[0], "desecho": desecho}
-						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
-						if 0 not in sala1_jugadores_cartas_nombres_oculta[2][0]:
-							sala1_continua_juego = False
-					if(name == sala1_jugadores_cartas_nombres_oculta[1][0][0]):
-						sala1_jugadores_cartas_nombres_oculta[1][0][int(carta)] = desecho
-						sala1_jugadores_cartas_nombres[1][int(carta)] = desecho
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[1], "desecho": desecho}
-						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
-						if 0 not in sala1_jugadores_cartas_nombres_oculta[2][0]:
-							sala1_continua_juego = False
-					if(name == sala1_jugadores_cartas_nombres_oculta[2][0][0]):
-						sala1_jugadores_cartas_nombres_oculta[2][0][int(carta)] = desecho
-						sala1_jugadores_cartas_nombres[2][int(carta)] = desecho
-						POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[2], "desecho": desecho}
-						client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
-						if 0 not in sala1_jugadores_cartas_nombres_oculta[2][0]:
-							sala1_continua_juego = False
-			if(msg['request'] == "POST_CARTAEXTRA"):
-				carta = msg['body']
-				name = msg['name']
-				if(name == sala1_jugadores_cartas_nombres_oculta[0][0][0]):
-					sala1_jugadores_cartas_nombres[0][int(carta)] = sala1_jugadores_cartas_nombres_oculta[0][0][7]
-					POST_CARTAEXTRA = {"response": "POST_CARTAEXTRA", "body" : sala1_jugadores_cartas_nombres[0]}
-					client.send(bytes(json.dumps(POST_CARTAEXTRA), 'UTF-8'))
-
-				if(name == sala1_jugadores_cartas_nombres_oculta[1][0][0]):
-					sala1_jugadores_cartas_nombres[1][int(carta)] = sala1_jugadores_cartas_nombres_oculta[1][0][7]
-					POST_CARTAEXTRA = {"response": "POST_CARTAEXTRA", "body" : sala1_jugadores_cartas_nombres[1]}
-					client.send(bytes(json.dumps(POST_CARTAEXTRA), 'UTF-8'))
-
-				if(name == sala1_jugadores_cartas_nombres_oculta[2][0][0]):
-					sala1_jugadores_cartas_nombres[2][int(carta)] = sala1_jugadores_cartas_nombres_oculta[2][0][7]
-					POST_CARTAEXTRA = {"response": "POST_CARTAEXTRA", "body" : sala1_jugadores_cartas_nombres[2]}
-					client.send(bytes(json.dumps(POST_CARTAEXTRA), 'UTF-8'))
-
-			if(msg['request'] == "POST_NOCARTAEXTRA"):
-				name = msg['name']
-				if(name == sala1_jugadores_cartas_nombres_oculta[0][0][0]):
-					POST_NOCARTAEXTRA = {"response": "POST_NOCARTAEXTRA", "body" : sala1_jugadores_cartas_nombres[0]}
-					client.send(bytes(json.dumps(POST_NOCARTAEXTRA), 'UTF-8'))
-
-				if(name == sala1_jugadores_cartas_nombres_oculta[1][0][0]):
-					POST_NOCARTAEXTRA = {"response": "POST_NOCARTAEXTRA", "body" : sala1_jugadores_cartas_nombres[1]}
-					client.send(bytes(json.dumps(POST_NOCARTAEXTRA), 'UTF-8'))
-
-				if(name == sala1_jugadores_cartas_nombres_oculta[2][0][0]):
-					POST_NOCARTAEXTRA = {"response": "POST_NOCARTAEXTRA", "body" : sala1_jugadores_cartas_nombres[2]}
-					client.send(bytes(json.dumps(POST_NOCARTAEXTRA), 'UTF-8'))
-
-
-
+					for i in range(3):
+						if(name == sala1_jugadores_cartas_nombres_oculta[i][0][0]):
+							sala1_jugadores_cartas_nombres_oculta[i][0][int(carta)] = desecho
+							sala1_jugadores_cartas_nombres[i][int(carta)] = desecho
+							sala1_jugadores_cartas_valores[i][int(carta)] = desecho_valor
+							POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[i], "desecho": desecho}
+							client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
+					
 			if(msg['request'] == "END_CONEX"):
 				sys.stdout.write(BOLD+GREEN+a[0]+":"+str(adress[1])+" Se desconecto"+RESET+"\n")
 				client.close()
