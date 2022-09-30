@@ -4,7 +4,7 @@ import json
 from deck_of_cards import deck_of_cards
 import time
 
-HOST, PORT = '127.0.0.1', 1234
+HOST, PORT = '52.14.18.211', 2000
 NAME = input("Ingresar Nombre: ")
 conexion = ""
 
@@ -63,9 +63,7 @@ while conexion:
 			carta1 = input("Ingrese el numero de la carta 1:\n")
 			carta2 = input("Ingrese el numero de la carta 2:\n")
 			POST_CARTA_INI = {"request": "POST_CARTA_INI", "body" : [carta1,carta2], "name": NAME}
-			#for i in range(3):
 			client_socket.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
-			time.sleep(30)
 			msg = json.loads(client_socket.recv(BUFSIZE).decode('UTF-8'))
 			print("BARAJA DE CARTAS")
 			print(msg['body'], "\n")

@@ -3,7 +3,7 @@ from threading import Thread
 import json
 from deck_of_cards import deck_of_cards
 
-HOST, PORT = 'https://golf-server-proyecto.herokuapp.com/', 1234
+HOST, PORT = '172.31.29.190', 2000
 
 BUFSIZ = 1024
 ADDR = (HOST, int(PORT))
@@ -68,17 +68,17 @@ def from_client(client, adress, nombre):
 				if(name == sala1_jugadores_cartas_nombres_oculta[0][0][0]):
 					sala1_jugadores_cartas_nombres_oculta[0][0][int(cartas[0])] = sala1_jugadores_cartas_nombres[0][int(cartas[0])]
 					sala1_jugadores_cartas_nombres_oculta[0][0][int(cartas[1])] = sala1_jugadores_cartas_nombres[0][int(cartas[1])]
-					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta[0]}
+					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta}
 					client.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
 				if(name == sala1_jugadores_cartas_nombres_oculta[1][0][0]):
 					sala1_jugadores_cartas_nombres_oculta[1][0][int(cartas[0])] = sala1_jugadores_cartas_nombres[1][int(cartas[0])]
 					sala1_jugadores_cartas_nombres_oculta[1][0][int(cartas[1])] = sala1_jugadores_cartas_nombres[1][int(cartas[1])]
-					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta[1]}
+					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta}
 					client.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
 				if(name == sala1_jugadores_cartas_nombres_oculta[2][0][0]):
 					sala1_jugadores_cartas_nombres_oculta[2][0][int(cartas[0])] = sala1_jugadores_cartas_nombres[2][int(cartas[0])]
 					sala1_jugadores_cartas_nombres_oculta[2][0][int(cartas[1])] = sala1_jugadores_cartas_nombres[2][int(cartas[1])]
-					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta[2]}
+					POST_CARTA_INI = {"response": "POST_CARTA_INI", "body" : sala1_jugadores_cartas_nombres_oculta}
 					client.send(bytes(json.dumps(POST_CARTA_INI), 'UTF-8'))
 			
 			if(msg['request'] == "GET_TURNO"):
