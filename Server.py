@@ -3,7 +3,7 @@ from threading import Thread
 import json
 from deck_of_cards import deck_of_cards
 
-HOST, PORT = 'https://golf-server-proyecto.herokuapp.com/', 1234
+HOST, PORT = '0.0.0.0', 5000
 
 BUFSIZ = 1024
 ADDR = (HOST, int(PORT))

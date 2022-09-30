@@ -4,7 +4,7 @@ import json
 from deck_of_cards import deck_of_cards
 import time
 
-HOST, PORT = '127.0.0.1', 1234
+HOST, PORT = 'https://redesproyecto.herokuapp.com/', 5000
 NAME = input("Ingresar Nombre: ")
 conexion = ""
 
