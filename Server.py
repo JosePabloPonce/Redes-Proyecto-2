@@ -3,7 +3,7 @@ from threading import Thread
 import json
 from deck_of_cards import deck_of_cards
 
-HOST, PORT = '127.0.0.1', 1234
+HOST, PORT = '0.0.0.0', 8080
 
 BUFSIZ = 1024
 ADDR = (HOST, int(PORT))
@@ -36,6 +36,7 @@ def from_client(client, adress, nombre):
 	global sala1_contador_turno_inicial 
 	global sala1_contador_turno_inicial2
 	global sala1_contador_turno2
+	global desecho_valor
 	while True:
 		try:
 			msg = json.loads(client.recv(BUFSIZ).decode('UTF-8'))
@@ -117,24 +118,69 @@ def from_client(client, adress, nombre):
 							sala1_jugadores_cartas_nombres[i][int(carta)] = card.name
 							sala1_jugadores_cartas_nombres_oculta[i][0][int(carta)] = card.name
 							sala1_jugadores_cartas_valores[i][int(carta)] = card.value
-							POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[i], "desecho": desecho}
+							POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta, "desecho": desecho}
 							client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
+							if 0 not in sala1_jugadores_cartas_nombres_oculta[i][0]:
+								sala1_continua_juego = False
 				if(opcion == "2"):
 					for i in range(3):
 						if(name == sala1_jugadores_cartas_nombres_oculta[i][0][0]):
 							desecho = card.name
 							sala1_jugadores_cartas_nombres_oculta[i][0][int(carta)] = sala1_jugadores_cartas_nombres[i][int(carta)]
-							POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[i], "desecho": desecho}
+							POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta, "desecho": desecho}
 							client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
+							if 0 not in sala1_jugadores_cartas_nombres_oculta[i][0]:
+								sala1_continua_juego = False
 				if(opcion == "3"):
 					for i in range(3):
 						if(name == sala1_jugadores_cartas_nombres_oculta[i][0][0]):
 							sala1_jugadores_cartas_nombres_oculta[i][0][int(carta)] = desecho
 							sala1_jugadores_cartas_nombres[i][int(carta)] = desecho
 							sala1_jugadores_cartas_valores[i][int(carta)] = desecho_valor
-							POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta[i], "desecho": desecho}
+							POST_TURNO = {"response": "POST_TURNO", "body" : sala1_jugadores_cartas_nombres_oculta, "desecho": desecho}
 							client.send(bytes(json.dumps(POST_TURNO), 'UTF-8'))
-					
+							if 0 not in sala1_jugadores_cartas_nombres_oculta[i][0]:
+								sala1_continua_juego = False
+
+
+			if(msg['request'] == "POST_CARTAEXTRA"):
+				carta = msg['body']
+				name = msg['name']
+				for i in range(3):
+					if(name == sala1_jugadores_cartas_nombres_oculta[i][0][0]):
+						sala1_jugadores_cartas_nombres[i][int(carta)] = sala1_jugadores_cartas_nombres_oculta[i][0][7]
+						POST_CARTAEXTRA = {"response": "POST_CARTAEXTRA", "body" : sala1_jugadores_cartas_nombres[i]}
+						client.send(bytes(json.dumps(POST_CARTAEXTRA), 'UTF-8'))
+
+			if(msg['request'] == "POST_NOCARTAEXTRA"):
+				name = msg['name']
+				for i in range(3):
+					if(name == sala1_jugadores_cartas_nombres_oculta[i][0][0]):
+						POST_NOCARTAEXTRA = {"response": "POST_NOCARTAEXTRA", "body" : sala1_jugadores_cartas_nombres[i]}
+						client.send(bytes(json.dumps(POST_NOCARTAEXTRA), 'UTF-8'))	
+
+			if(msg['request'] == "GANADOR"):
+				nombre1 = sala1_jugadores_cartas_valores[0][0]
+				punteo1 = sala1_jugadores_cartas_valores[0][1] + sala1_jugadores_cartas_valores[0][2] + sala1_jugadores_cartas_valores[0][3] + sala1_jugadores_cartas_valores[0][4] + sala1_jugadores_cartas_valores[0][5] + sala1_jugadores_cartas_valores[0][6] 
+				nombre2 = sala1_jugadores_cartas_valores[1][0]
+				punteo2 = sala1_jugadores_cartas_valores[1][1] + sala1_jugadores_cartas_valores[1][2] + sala1_jugadores_cartas_valores[1][3] + sala1_jugadores_cartas_valores[1][4] + sala1_jugadores_cartas_valores[1][5] + sala1_jugadores_cartas_valores[1][6] 
+				nombre3 = sala1_jugadores_cartas_valores[2][0]
+				punteo3 = sala1_jugadores_cartas_valores[2][1] + sala1_jugadores_cartas_valores[2][2] + sala1_jugadores_cartas_valores[2][3] + sala1_jugadores_cartas_valores[2][4] + sala1_jugadores_cartas_valores[2][5] + sala1_jugadores_cartas_valores[2][6] 
+				resultados = [[nombre1,punteo1],[nombre2,punteo2],[nombre3,punteo3]]
+				winner = ""
+				if(punteo1 < punteo2 and punteo1 < punteo3):
+					winner = nombre1
+				if(punteo2 < punteo1 and punteo1 < punteo3):
+					winner = nombre2
+				if(punteo3 < punteo2 and punteo1 < punteo1):
+					winner = nombre3
+				GANADOR = {"response": "GANADOR", "body" : resultados, "ganador": winner}
+				client.send(bytes(json.dumps(GANADOR), 'UTF-8'))	
+			if(msg['request'] == "CHAT"):
+				message = msg["body"]
+				CHAT = {"response": "CHAT", "body": message}
+				for socket in sala1_sockets:
+					socket.send(bytes(json.dumps(CHAT), 'UTF-8'))
 			if(msg['request'] == "END_CONEX"):
 				sys.stdout.write(BOLD+GREEN+a[0]+":"+str(adress[1])+" Se desconecto"+RESET+"\n")
 				client.close()
